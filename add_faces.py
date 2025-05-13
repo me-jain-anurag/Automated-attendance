@@ -33,17 +33,35 @@ while True:
 video.release()
 cv2.destroyAllWindows()
 
-# Process and save face data
+# Process new face data
 faces_data = np.asarray(faces_data)
 faces_data = faces_data.reshape(100, -1)
-names = [name]*100
+new_names = [name]*100
 
-# Save the current face data (overwrite existing data)
+# Load existing data if available
+existing_faces = []
+existing_names = []
+if os.path.exists('data/faces_data.pkl'):
+    with open('data/faces_data.pkl', 'rb') as f:
+        existing_faces = pickle.load(f)
+if os.path.exists('data/names.pkl'):
+    with open('data/names.pkl', 'rb') as f:
+        existing_names = pickle.load(f)
+
+# Combine existing and new data
+if len(existing_faces) > 0:
+    combined_faces = np.vstack((existing_faces, faces_data))
+    combined_names = existing_names + new_names
+else:
+    combined_faces = faces_data
+    combined_names = new_names
+
+# Save combined face data
 with open('data/faces_data.pkl', 'wb') as f:
-    pickle.dump(faces_data, f)
+    pickle.dump(combined_faces, f)
 
-# Save the current names (overwrite existing data)
+# Save combined names
 with open('data/names.pkl', 'wb') as f:
-    pickle.dump(names, f)
+    pickle.dump(combined_names, f)
 
-print(f"Face data saved for {name}. You can now run test.py to start recognition.")
+print(f"Face data saved for {name}. Total people in database: {len(set(combined_names))//100}")
