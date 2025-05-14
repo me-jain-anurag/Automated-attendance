@@ -87,7 +87,8 @@ try:
             
         # Attendance Timeline
         st.markdown("### 📈 Attendance Timeline")
-        df['TIME'] = pd.to_datetime(df['TIME'], format='%H:%M-%S')
+        df['TIME'] = pd.to_datetime(df['TIME'], format='%H:%M-%S', errors='coerce')
+        df['DATE'] = date
         df['Hour'] = df['TIME'].dt.hour
         hourly_counts = df.groupby('Hour').size().reset_index(name='Count')
         fig = px.line(hourly_counts, x='Hour', y='Count', 
@@ -104,12 +105,17 @@ try:
         df_display = df.copy()
         df_display['Serial No.'] = range(1, len(df_display) + 1)
         df_display = df_display[['Serial No.', 'NAME', 'TIME']]
+
+        # Format time to show only HH:MM (without date and seconds)
+        df_display['TIME'] = df_display['TIME'].apply(
+            lambda x: x.strftime("%H:%M") if not pd.isna(x) else x
+        )
+
         st.dataframe(
             df_display.style.highlight_max(axis=0)
             .set_properties(**{'background-color': 'white',
-                             'color': 'black',
-                             'border-color': 'lightgrey'})
-            .format({'TIME': lambda x: x.split('-')[0] if isinstance(x, str) else x}),
+                            'color': 'black',
+                            'border-color': 'lightgrey'}),
             use_container_width=True
         )
         
