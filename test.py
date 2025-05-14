@@ -86,18 +86,29 @@ while True:
     k = cv2.waitKey(1)
     
     if k == ord('o'):
-        attendance_count += 1
-        speak("Attendance Taken..")
-        
-        exist = os.path.isfile(f"Attendance/Attendance_{date}.csv")
-        with open(f"Attendance/Attendance_{date}.csv", "+a") as csvfile:
-            writer = csv.writer(csvfile)
-            if not exist:
-                writer.writerow(COL_NAMES)
-            writer.writerow(attendance)
-            
-    elif k == ord('q'):
-        break
+        # Check for duplicates
+        duplicate = False
+        if os.path.exists(f"Attendance/Attendance_{date}.csv"):
+            with open(f"Attendance/Attendance_{date}.csv", "r") as csvfile:
+                reader = csv.reader(csvfile)
+                # Skip header
+                next(reader, None)  
+                for row in reader:
+                    if row[0] == attendance[0]:  # Check if name exists
+                        duplicate = True
+                        break
+
+        if not duplicate:
+            attendance_count += 1
+            speak("Attendance Taken..")
+            # Write to CSV only if not duplicate
+            with open(f"Attendance/Attendance_{date}.csv", "+a") as csvfile:
+                writer = csv.writer(csvfile)
+                if not os.path.isfile(f"Attendance/Attendance_{date}.csv"):
+                    writer.writerow(COL_NAMES)
+                writer.writerow(attendance)
+        else:
+            speak("Attendance already recorded")
 
 video.release()
 cv2.destroyAllWindows()
